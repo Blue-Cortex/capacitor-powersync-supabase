@@ -49,6 +49,7 @@
     "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
     "docgen": "docgen --api PowerSyncPlugin --output-readme README.md --output-json dist/docs.json",
+    "prepare": "bun run build",
     "build": "bun run clean && bun run docgen && tsc -b && rollup -c rollup.config.mjs",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
