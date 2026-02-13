@@ -57,3 +57,7 @@ ios/derived exp
 android/capacitor.settings.gradle
 ios/App/Podfile.lock
 package-lock.json (if using yarn, keep yarn.lock)
+
+# Generated Types
+vite.config.d.mts
+vite.config.mjs
