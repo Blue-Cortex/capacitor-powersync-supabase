@@ -4,7 +4,7 @@ import {
   CrudEntry,
   PowerSyncBackendConnector,
   UpdateType,
-  type PowerSyncCredentials
+  type PowerSyncCredentials,
 } from '@powersync/web';
 
 import { Session, SupabaseClient, createClient } from '@supabase/supabase-js';
@@ -24,7 +24,7 @@ const FATAL_RESPONSE_CODES = [
   // Examples include NOT NULL, FOREIGN KEY and UNIQUE violations.
   new RegExp('^23...$'),
   // INSUFFICIENT PRIVILEGE - typically a row-level security violation
-  new RegExp('^42501$')
+  new RegExp('^42501$'),
 ];
 
 export type SupabaseConnectorListener = {
@@ -46,8 +46,8 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
 
     this.client = createClient(this.config.supabaseUrl, this.config.supabaseAnonKey, {
       auth: {
-        persistSession: true
-      }
+        persistSession: true,
+      },
     });
     this.currentSession = null;
     this.ready = false;
@@ -68,10 +68,10 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
   async login(username: string, password: string) {
     const {
       data: { session },
-      error
+      error,
     } = await this.client.auth.signInWithPassword({
       email: username,
-      password: password
+      password: password,
     });
 
     if (error) {
@@ -84,10 +84,10 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
   async signUp(email: string, password: string) {
     const {
       data: { session },
-      error
+      error,
     } = await this.client.auth.signUp({
       email,
-      password
+      password,
     });
 
     if (error) {
@@ -116,7 +116,7 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
   async fetchCredentials() {
     const {
       data: { session },
-      error
+      error,
     } = await this.client.auth.getSession();
 
     if (!session || error) {
@@ -127,7 +127,7 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
 
     return {
       endpoint: this.config.powersyncUrl,
-      token: session.access_token ?? ''
+      token: session.access_token ?? '',
     } satisfies PowerSyncCredentials;
   }
 
@@ -147,16 +147,19 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
         const table = this.client.from(op.table);
         let result: any;
         switch (op.op) {
-          case UpdateType.PUT:
+          case UpdateType.PUT: {
             const record = { ...op.opData, id: op.id };
             result = await table.upsert(record);
             break;
-          case UpdateType.PATCH:
+          }
+          case UpdateType.PATCH: {
             result = await table.update(op.opData).eq('id', op.id);
             break;
-          case UpdateType.DELETE:
+          }
+          case UpdateType.DELETE: {
             result = await table.delete().eq('id', op.id);
             break;
+          }
         }
 
         if (result.error) {
