@@ -147,16 +147,19 @@ export class SupabaseConnector extends BaseObserver<SupabaseConnectorListener> i
         const table = this.client.from(op.table);
         let result: any;
         switch (op.op) {
-          case UpdateType.PUT:
+          case UpdateType.PUT: {
             const record = { ...op.opData, id: op.id };
             result = await table.upsert(record);
             break;
-          case UpdateType.PATCH:
+          }
+          case UpdateType.PATCH: {
             result = await table.update(op.opData).eq('id', op.id);
             break;
-          case UpdateType.DELETE:
+          }
+          case UpdateType.DELETE: {
             result = await table.delete().eq('id', op.id);
             break;
+          }
         }
 
         if (result.error) {
