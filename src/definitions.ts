@@ -137,8 +137,5 @@ export interface PowerSyncPlugin {
   /**
    * Execute a write transaction
    */
-  writeTransaction(options: { 
-    sql: string[]; 
-    parameters?: any[][] 
-  }): Promise<void>;
+  writeTransaction(options: { sql: string[]; parameters?: any[][] }): Promise<void>;
 }
