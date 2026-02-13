@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Parent Pal PowerSync POC</string>
+    <string name="title_activity_main">Parent Pal PowerSync POC</string>
+    <string name="package_name">com.bluecortex.palforparents.mobile.dev</string>
+    <string name="custom_url_scheme">com.bluecortex.palforparents.mobile.dev</string>
+</resources>
