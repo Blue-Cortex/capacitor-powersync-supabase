@@ -8,10 +8,17 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 apply plugin: 'com.android.library'
 
 android {
-    namespace 'com.bluecortex.mobile'
+    namespace 'com.bluecortex.mobile.libs.database'
     compileSdk libs.versions.android.compileSdk.get().toInteger()
 
     defaultConfig {
@@ -33,6 +40,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 dependencies {
