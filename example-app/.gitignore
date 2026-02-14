@@ -61,3 +61,4 @@ package-lock.json (if using yarn, keep yarn.lock)
 # Generated Types
 vite.config.d.mts
 vite.config.mjs
+**/.temp/

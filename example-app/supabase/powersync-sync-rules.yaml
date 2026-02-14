@@ -1,0 +1,52 @@
+# PowerSync sync rules for Parent Pal
+# - No schema prefix (PowerSync uses configured schema, e.g. ppal).
+# - Parameter queries: no subqueries, no table aliases.
+# - Each data query returns "id" and selects from a single table.
+# - theme_settings omitted (add to backend replication if needed).
+
+bucket_definitions:
+  user_profile:
+    parameters: SELECT id AS user_id FROM users WHERE id = request.user_id()
+    data:
+      - SELECT * FROM users WHERE id = bucket.user_id
+      - SELECT user_id AS id, user_id, status, updated_at FROM user_status WHERE user_id = bucket.user_id
+      - SELECT * FROM linked_accounts WHERE user_id = bucket.user_id
+      - SELECT user_id AS id, user_id, push_enabled, email_enabled, task_reminders, goal_updates, insight_alerts, daily_summary, weekly_report, updated_at FROM notification_settings WHERE user_id = bucket.user_id
+      - SELECT user_id AS id, user_id, data_collection, analytics_enabled, share_with_collaborators, updated_at FROM privacy_settings WHERE user_id = bucket.user_id
+
+  owned_kids:
+    parameters: SELECT id AS kid_id FROM kids WHERE user_id = request.user_id()
+    data:
+      - SELECT * FROM kids WHERE id = bucket.kid_id
+      - SELECT (kid_id || '_' || user_id) AS id, kid_id, user_id, access, invited_at, accepted_at FROM kid_collaborators WHERE kid_id = bucket.kid_id
+
+  collaborated_kids:
+    parameters: SELECT kid_id FROM kid_collaborators WHERE user_id = request.user_id() AND accepted_at IS NOT NULL
+    data:
+      - SELECT * FROM kids WHERE id = bucket.kid_id
+      - SELECT (kid_id || '_' || user_id) AS id, kid_id, user_id, access, invited_at, accepted_at FROM kid_collaborators WHERE kid_id = bucket.kid_id
+
+  owned_goals:
+    parameters: SELECT id AS goal_id FROM goals WHERE deleted_at IS NULL AND created_by = request.user_id()
+    data:
+      - SELECT * FROM goals WHERE id = bucket.goal_id
+      - SELECT (goal_id || '_' || kid_id) AS id, goal_id, kid_id, assigned_at FROM goal_kids WHERE goal_id = bucket.goal_id
+      - SELECT * FROM goal_owners WHERE goal_id = bucket.goal_id
+      - SELECT * FROM tasks WHERE goal_id = bucket.goal_id AND deleted_at IS NULL
+      - SELECT * FROM attachments WHERE goal_id = bucket.goal_id
+
+  owned_goal_tasks:
+    parameters: SELECT id AS task_id FROM tasks WHERE deleted_at IS NULL AND goal_id IS NOT NULL AND created_by = request.user_id()
+    data:
+      - SELECT * FROM tasks WHERE id = bucket.task_id
+      - SELECT (task_id || '_' || kid_id) AS id, task_id, kid_id, assigned_at FROM task_kids WHERE task_id = bucket.task_id
+      - SELECT * FROM task_owners WHERE task_id = bucket.task_id
+      - SELECT * FROM attachments WHERE task_id = bucket.task_id
+
+  owned_standalone_tasks:
+    parameters: SELECT id AS task_id FROM tasks WHERE deleted_at IS NULL AND goal_id IS NULL AND created_by = request.user_id()
+    data:
+      - SELECT * FROM tasks WHERE id = bucket.task_id
+      - SELECT (task_id || '_' || kid_id) AS id, task_id, kid_id, assigned_at FROM task_kids WHERE task_id = bucket.task_id
+      - SELECT * FROM task_owners WHERE task_id = bucket.task_id
+      - SELECT * FROM attachments WHERE task_id = bucket.task_id

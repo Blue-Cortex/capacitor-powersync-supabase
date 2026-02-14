@@ -12,7 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.1.0"),
-        .package(name: "BlueCortexCapacitorPowersyncSupabase", path: "../../../..")
+        .package(name: "BlueCortexCapacitorPowersyncSupabase", path: "../../../node_modules/@blue-cortex/capacitor-powersync-supabase")
     ],
     targets: [
         .target(
