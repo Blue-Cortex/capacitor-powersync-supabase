@@ -181,6 +181,7 @@ export const powerSyncSchema: SchemaTable[] = [
   {
     name: 'task_owners',
     columns: [
+      { name: 'id', type: 'TEXT' },
       { name: 'task_id', type: 'TEXT' },
       { name: 'name', type: 'TEXT' },
       { name: 'email', type: 'TEXT' },
