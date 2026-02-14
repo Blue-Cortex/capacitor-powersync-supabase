@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@blue-cortex/capacitor-powersync-supabase": "Blue-Cortex/capacitor-powersync-supabase#v1.0.2",
     "@capacitor/core": "^8.1.0",
-    "@blue-cortex/capacitor-powersync-supabase": "file:..",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

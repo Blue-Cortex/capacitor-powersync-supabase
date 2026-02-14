@@ -1,4 +1,4 @@
-package com.bluecortex.mobile
+package com.bluecortex.mobile.libs.database
 
 import co.touchlab.kermit.Logger
 import com.powersync.PowerSyncDatabase
