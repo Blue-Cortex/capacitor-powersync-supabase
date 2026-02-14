@@ -11,7 +11,7 @@
     "supabase:push": "bunx supabase link --project-ref $SUPABASE_PROJECT_REF --password \"$SUPABASE_DB_PASSWORD\" && bunx supabase db push"
   },
   "dependencies": {
-    "@blue-cortex/capacitor-powersync-supabase": "Blue-Cortex/capacitor-powersync-supabase#v1.0.2",
+    "@blue-cortex/capacitor-powersync-supabase": "..",
     "@capacitor/core": "^8.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

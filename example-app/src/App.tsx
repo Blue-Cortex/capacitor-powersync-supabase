@@ -1,7 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { PowerSync, SupabaseConnector } from '@blue-cortex/capacitor-powersync-supabase';
-import { powerSyncSchema } from './lib/powerSyncSchema';
+// import { powerSyncSchema } from './lib/powerSyncSchema';
+import { powerSyncSchema } from './lib/ppalSchema';
+import { KidsPage } from './pages/KidsPage';
 import './App.css';
+
+type Page = 'home' | 'kids';
 
 interface User {
   id: string;
@@ -22,11 +26,17 @@ function App() {
   const [status, setStatus] = useState<string>('Not initialized');
   const [user, setUser] = useState<User | null>(null);
   const [lists, setLists] = useState<TodoList[]>([]);
+  const [page, setPage] = useState<Page>('home');
   const listNameRef = useRef<HTMLInputElement>(null);
   const connectorRef = useRef<SupabaseConnector | null>(null);
+  const authUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     initializePowerSync();
+    return () => {
+      authUnsubscribeRef.current?.();
+      authUnsubscribeRef.current = null;
+    };
   }, []);
 
   const initializePowerSync = async () => {
@@ -42,6 +52,18 @@ function App() {
       connectorRef.current = connector;
       await connector.init();
 
+      // Keep PowerSync token in sync when Supabase refreshes the JWT (e.g. before expiry)
+      const {
+        data: { subscription }
+      } = connector.client.auth.onAuthStateChange((_event, session) => {
+        if (session?.access_token) {
+          PowerSync.setToken({ token: session.access_token }).catch((err) =>
+            console.warn('PowerSync setToken after auth change failed:', err)
+          );
+        }
+      });
+      authUnsubscribeRef.current = subscription.unsubscribe;
+
       // Initialize PowerSync with schema from src/lib/powerSyncSchema.ts
       await PowerSync.initialize({
         config: {
@@ -49,7 +71,7 @@ function App() {
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
           supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           schema: powerSyncSchema,
-          dbFilename: 'powersync.db'
+          dbFilename: 'parentpal.db'
         }
       });
 
@@ -178,6 +200,14 @@ function App() {
     }
   };
 
+  if (user && page === 'kids') {
+    return (
+      <div className="App">
+        <KidsPage userId={user.id} onBack={() => setPage('home')} />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <h1>PowerSync Demo</h1>
@@ -187,18 +217,21 @@ function App() {
       </div>
 
       {initialized && (
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
           {!user ? (
-            <button onClick={handleSignIn} style={{ padding: '10px 20px', marginRight: '10px' }}>
+            <button onClick={handleSignIn} style={{ padding: '10px 20px' }}>
               Sign In
             </button>
           ) : (
             <>
-              <button onClick={handleSignOut} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: '#ff4444' }}>
+              <button onClick={handleSignOut} style={{ padding: '10px 20px', backgroundColor: '#ff4444' }}>
                 Sign Out
               </button>
               <button onClick={loadLists} style={{ padding: '10px 20px' }}>
                 Load Lists
+              </button>
+              <button onClick={() => setPage('kids')} style={{ padding: '10px 20px' }}>
+                Kids
               </button>
             </>
           )}
