@@ -3,9 +3,14 @@ import { PowerSync, SupabaseConnector } from '@blue-cortex/capacitor-powersync-s
 // import { powerSyncSchema } from './lib/powerSyncSchema';
 import { powerSyncSchema } from './lib/ppalSchema';
 import { KidsPage } from './pages/KidsPage';
+import { GoalsPage } from './pages/GoalsPage';
+import { TasksPage } from './pages/TasksPage';
+import { AddGoalPage } from './pages/AddGoalPage';
+import { AddTaskPage } from './pages/AddTaskPage';
+import { GoalsTasksDataPage } from './pages/GoalsTasksDataPage';
 import './App.css';
 
-type Page = 'home' | 'kids';
+type Page = 'home' | 'kids' | 'goals' | 'tasks' | 'addGoal' | 'addTask' | 'goalsTasksData';
 
 interface User {
   id: string;
@@ -208,6 +213,62 @@ function App() {
     );
   }
 
+  if (user && page === 'goals') {
+    return (
+      <div className="App">
+        <GoalsPage
+          userId={user.id}
+          onBack={() => setPage('home')}
+          onAddGoal={() => setPage('addGoal')}
+        />
+      </div>
+    );
+  }
+
+  if (user && page === 'tasks') {
+    return (
+      <div className="App">
+        <TasksPage
+          userId={user.id}
+          onBack={() => setPage('home')}
+          onAddTask={() => setPage('addTask')}
+        />
+      </div>
+    );
+  }
+
+  if (user && page === 'addGoal') {
+    return (
+      <div className="App">
+        <AddGoalPage
+          userId={user.id}
+          onBack={() => setPage('goals')}
+          onSaved={() => setPage('goals')}
+        />
+      </div>
+    );
+  }
+
+  if (user && page === 'addTask') {
+    return (
+      <div className="App">
+        <AddTaskPage
+          userId={user.id}
+          onBack={() => setPage('tasks')}
+          onSaved={() => setPage('tasks')}
+        />
+      </div>
+    );
+  }
+
+  if (page === 'goalsTasksData') {
+    return (
+      <div className="App">
+        <GoalsTasksDataPage userId={user?.id ?? null} onBack={() => setPage('home')} />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <h1>PowerSync Demo</h1>
@@ -232,6 +293,15 @@ function App() {
               </button>
               <button onClick={() => setPage('kids')} style={{ padding: '10px 20px' }}>
                 Kids
+              </button>
+              <button onClick={() => setPage('goals')} style={{ padding: '10px 20px' }}>
+                Goals
+              </button>
+              <button onClick={() => setPage('tasks')} style={{ padding: '10px 20px' }}>
+                Tasks
+              </button>
+              <button onClick={() => setPage('goalsTasksData')} style={{ padding: '10px 20px' }}>
+                Goals & Tasks Data
               </button>
             </>
           )}
