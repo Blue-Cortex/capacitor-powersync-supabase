@@ -1,4 +1,4 @@
-package com.bluecortex.mobile
+package com.bluecortex.mobile.libs.database
 
 import android.content.Context
 import com.powersync.PowerSyncDatabase

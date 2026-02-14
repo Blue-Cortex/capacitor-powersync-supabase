@@ -1,4 +1,4 @@
-package com.bluecortex.mobile
+package com.bluecortex.mobile.libs.database
 
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
