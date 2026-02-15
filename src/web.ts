@@ -1,68 +1,98 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type { 
-  PowerSyncPlugin, 
-  PowerSyncConfig, 
+import type {
+  PowerSyncPlugin,
+  PowerSyncConfig,
   QueryResult,
   SyncStatus,
-  WatchOptions
+  WatchOptions,
 } from './definitions';
+import { WebPowerSyncManager } from './web/WebPowerSyncManager';
 
 export class BlueCortexPowerSyncSupabaseWeb extends WebPlugin implements PowerSyncPlugin {
+  private manager: WebPowerSyncManager | null = null;
+
   async initialize(options: { config: PowerSyncConfig }): Promise<void> {
-    console.log('PowerSync Web: initialize', options);
-    throw this.unimplemented('Not implemented on web.');
+    console.log('[PowerSync Web] initialize called', { hasSchema: !!options.config?.schema, schemaLength: options.config?.schema?.length });
+    const config = options.config;
+    if (!config.schema) {
+      throw new Error('For web, config.schema is required');
+    }
+    this.manager = WebPowerSyncManager.create(
+      {
+        powersyncUrl: config.powersyncUrl,
+        supabaseUrl: config.supabaseUrl,
+        supabaseAnonKey: config.supabaseAnonKey,
+        dbFilename: config.dbFilename,
+      },
+      config.schema
+    );
+    console.log('[PowerSync Web] manager created');
   }
 
   async connect(): Promise<void> {
-    throw this.unimplemented('Not implemented on web.');
+    console.log('[PowerSync Web] connect called', { hasManager: !!this.manager });
+    if (!this.manager) throw new Error('PowerSync not initialized. Call initialize() first.');
+    await this.manager.connect();
+    console.log('[PowerSync Web] connect done');
   }
 
   async disconnect(options?: { clearDatabase?: boolean }): Promise<void> {
-    console.log('PowerSync Web: disconnect', options);
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    await this.manager.disconnect(options?.clearDatabase ?? false);
   }
 
-  async setToken(_options: { token: string }): Promise<void> {
-    // No-op on web — token is managed in-process by SupabaseConnector
-    console.log('PowerSync Web: setToken (no-op on web)');
+  async setToken(options: { token: string }): Promise<void> {
+    if (this.manager) this.manager.setToken(options.token);
   }
 
   async execute(options: { sql: string; parameters?: any[] }): Promise<QueryResult> {
-    console.log('PowerSync Web: execute', options.sql);
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    return this.manager.execute(options.sql, options.parameters ?? []);
   }
 
   async getAll(options: { sql: string; parameters?: any[] }): Promise<QueryResult> {
-    console.log('PowerSync Web: getAll', options.sql);
-    throw this.unimplemented('Not implemented on web.');
+    console.log('[PowerSync Web] getAll called', { sqlLength: options.sql?.length, parameters: options.parameters });
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    const result = await this.manager.getAll(options.sql, options.parameters ?? []);
+    console.log('[PowerSync Web] getAll result', { rowsLength: result?.rows?.length, rows: result?.rows });
+    return result;
   }
 
   async getOptional(options: { sql: string; parameters?: any[] }): Promise<{ row: any | null }> {
-    console.log('PowerSync Web: getOptional', options.sql);
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    return this.manager.getOptional(options.sql, options.parameters ?? []);
   }
 
   async watch(options: WatchOptions & { callbackId: string }): Promise<{ watchId: string }> {
-    console.log('PowerSync Web: watch', options.sql);
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    const watchId = this.manager.watch(
+      options.sql,
+      options.parameters ?? [],
+      (id, rows) => {
+        this.notifyListeners('watchResult', { watchId: id, rows });
+      }
+    );
+    return { watchId };
   }
 
   async unwatch(options: { watchId: string }): Promise<void> {
-    console.log('PowerSync Web: unwatch', options.watchId);
-    throw this.unimplemented('Not implemented on web.');
+    if (this.manager) this.manager.unwatch(options.watchId);
   }
 
   async getSyncStatus(): Promise<SyncStatus> {
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    return this.manager.getSyncStatus();
   }
 
   async getVersion(): Promise<{ version: string }> {
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) return { version: 'unknown' };
+    const version = await this.manager.getVersion();
+    return { version };
   }
 
   async writeTransaction(options: { sql: string[]; parameters?: any[][] }): Promise<void> {
-    console.log('PowerSync Web: writeTransaction', options.sql);
-    throw this.unimplemented('Not implemented on web.');
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    await this.manager.writeTransaction(options.sql, options.parameters ?? []);
   }
 }

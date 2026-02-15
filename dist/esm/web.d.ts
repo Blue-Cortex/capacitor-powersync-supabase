@@ -1,6 +1,7 @@
 import { WebPlugin } from '@capacitor/core';
 import type { PowerSyncPlugin, PowerSyncConfig, QueryResult, SyncStatus, WatchOptions } from './definitions';
 export declare class BlueCortexPowerSyncSupabaseWeb extends WebPlugin implements PowerSyncPlugin {
+    private manager;
     initialize(options: {
         config: PowerSyncConfig;
     }): Promise<void>;
@@ -8,7 +9,7 @@ export declare class BlueCortexPowerSyncSupabaseWeb extends WebPlugin implements
     disconnect(options?: {
         clearDatabase?: boolean;
     }): Promise<void>;
-    setToken(_options: {
+    setToken(options: {
         token: string;
     }): Promise<void>;
     execute(options: {
