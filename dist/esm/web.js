@@ -52,6 +52,13 @@ export class BlueCortexPowerSyncSupabaseWeb extends WebPlugin {
         console.log('[PowerSync Web] getAll result', { rowsLength: (_c = result === null || result === void 0 ? void 0 : result.rows) === null || _c === void 0 ? void 0 : _c.length, rows: result === null || result === void 0 ? void 0 : result.rows });
         return result;
     }
+    async query(options) {
+        var _a, _b;
+        if (!this.manager)
+            throw new Error('PowerSync not initialized');
+        const result = await this.manager.getAll(options.sql, (_a = options.parameters) !== null && _a !== void 0 ? _a : []);
+        return { rows: ((_b = result.rows) !== null && _b !== void 0 ? _b : []) };
+    }
     async getOptional(options) {
         var _a;
         if (!this.manager)
