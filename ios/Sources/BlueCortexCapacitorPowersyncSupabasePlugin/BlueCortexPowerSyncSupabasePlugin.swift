@@ -12,6 +12,7 @@ public class BlueCortexPowerSyncSupabasePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "setToken", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "execute", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getAll", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "query", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getOptional", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "watch", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "unwatch", returnType: CAPPluginReturnPromise),
@@ -131,6 +132,30 @@ public class BlueCortexPowerSyncSupabasePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc public func getAll(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let manager = self.manager else {
+                call.reject("PowerSync not initialized")
+                return
+            }
+            
+            guard let sql = call.getString("sql") else {
+                call.reject("Missing sql parameter")
+                return
+            }
+            
+            let parameters = call.getArray("parameters") as? [Any] ?? []
+            
+            do {
+                let results = try await manager.getAll(sql: sql, parameters: parameters)
+                call.resolve(["rows": results])
+            } catch {
+                call.reject("Query failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Typed query – same as getAll, returns { rows }. Use from JS as PowerSync.query<YourType>({ sql, parameters }).
+    @objc public func query(_ call: CAPPluginCall) {
         Task { @MainActor in
             guard let manager = self.manager else {
                 call.reject("PowerSync not initialized")

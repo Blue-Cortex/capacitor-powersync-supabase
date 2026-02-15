@@ -48,6 +48,10 @@ export interface WatchOptions {
     parameters?: any[];
     throttleMs?: number;
 }
+export interface QueryOptions {
+    sql: string;
+    parameters?: any[];
+}
 export type WatchCallback = (result: QueryResult) => void;
 export interface PowerSyncPlugin {
     initialize(options: {
@@ -68,6 +72,9 @@ export interface PowerSyncPlugin {
         sql: string;
         parameters?: any[];
     }): Promise<QueryResult>;
+    query<T = unknown>(options: QueryOptions): Promise<{
+        rows: T[];
+    }>;
     getOptional(options: {
         sql: string;
         parameters?: any[];

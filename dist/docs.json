@@ -102,6 +102,25 @@
         "slug": "getall"
       },
       {
+        "name": "query",
+        "signature": "<T = unknown>(options: QueryOptions) => Promise<{ rows: T[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "QueryOptions"
+          }
+        ],
+        "returns": "Promise<{ rows: T[]; }>",
+        "tags": [],
+        "docs": "Typed query – same as getAll but returns rows as T[].\nUse for one-shot reads: PowerSync.query<EnhancedListRecord>({ sql, parameters }).",
+        "complexTypes": [
+          "T",
+          "QueryOptions"
+        ],
+        "slug": "query"
+      },
+      {
         "name": "getOptional",
         "signature": "(options: { sql: string; parameters?: any[]; }) => Promise<{ row: any | null; }>",
         "parameters": [
@@ -1173,6 +1192,29 @@
           "docs": "",
           "complexTypes": [],
           "type": "any[]"
+        }
+      ]
+    },
+    {
+      "name": "QueryOptions",
+      "slug": "queryoptions",
+      "docs": "Options for typed query (mirrors PowerSync db.query<RowType>({})).\nUse for one-shot reads with a generic row type.",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "sql",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "parameters",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "any[] | undefined"
         }
       ]
     },

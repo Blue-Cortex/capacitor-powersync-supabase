@@ -280,33 +280,15 @@ var capacitorPowerSyncSubasePlugin = (function (exports, core, web$1, supabaseJs
         }
         async execute(sql, parameters = []) {
             var _a, _b;
-            console.log('[WebPowerSyncManager] execute start', { sqlLength: sql === null || sql === void 0 ? void 0 : sql.length });
-            const result = await this.db.writeTransaction(async (tx) => {
-                return await tx.execute(sql, parameters);
-            });
-            const rows = (_b = (_a = result.rows) === null || _a === void 0 ? void 0 : _a._array) !== null && _b !== void 0 ? _b : [];
-            console.log('[WebPowerSyncManager] execute done', { rowsLength: rows.length });
-            return { rows };
+            const result = await this.db.execute(sql, parameters);
+            return { rows: (_b = (_a = result.rows) === null || _a === void 0 ? void 0 : _a._array) !== null && _b !== void 0 ? _b : [] };
         }
         async getAll(sql, parameters = []) {
-            console.log('[WebPowerSyncManager] getAll start', { sqlLength: sql === null || sql === void 0 ? void 0 : sql.length });
-            const rows = await this.db.readTransaction(async (tx) => {
-                var _a, _b;
-                const res = await tx.execute(sql, parameters);
-                return (_b = (_a = res.rows) === null || _a === void 0 ? void 0 : _a._array) !== null && _b !== void 0 ? _b : [];
-            });
-            console.log('[WebPowerSyncManager] getAll done', { rowsLength: rows === null || rows === void 0 ? void 0 : rows.length });
+            const rows = await this.db.getAll(sql, parameters);
             return { rows: rows !== null && rows !== void 0 ? rows : [] };
         }
         async getOptional(sql, parameters = []) {
-            console.log('[WebPowerSyncManager] getOptional start', { sqlLength: sql === null || sql === void 0 ? void 0 : sql.length });
-            const row = await this.db.readTransaction(async (tx) => {
-                var _a;
-                const res = await tx.execute(sql, parameters);
-                const arr = (_a = res.rows) === null || _a === void 0 ? void 0 : _a._array;
-                return (arr === null || arr === void 0 ? void 0 : arr.length) ? arr[0] : null;
-            });
-            console.log('[WebPowerSyncManager] getOptional done', { hasRow: row != null });
+            const row = await this.db.getOptional(sql, parameters);
             return { row: row !== null && row !== void 0 ? row : null };
         }
         watch(sql, parameters = [], onResult) {
@@ -407,6 +389,13 @@ var capacitorPowerSyncSubasePlugin = (function (exports, core, web$1, supabaseJs
             const result = await this.manager.getAll(options.sql, (_b = options.parameters) !== null && _b !== void 0 ? _b : []);
             console.log('[PowerSync Web] getAll result', { rowsLength: (_c = result === null || result === void 0 ? void 0 : result.rows) === null || _c === void 0 ? void 0 : _c.length, rows: result === null || result === void 0 ? void 0 : result.rows });
             return result;
+        }
+        async query(options) {
+            var _a, _b;
+            if (!this.manager)
+                throw new Error('PowerSync not initialized');
+            const result = await this.manager.getAll(options.sql, (_a = options.parameters) !== null && _a !== void 0 ? _a : []);
+            return { rows: ((_b = result.rows) !== null && _b !== void 0 ? _b : []) };
         }
         async getOptional(options) {
             var _a;
