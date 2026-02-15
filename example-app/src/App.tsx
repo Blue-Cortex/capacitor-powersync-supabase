@@ -70,6 +70,7 @@ function App() {
       authUnsubscribeRef.current = subscription.unsubscribe;
 
       // Initialize PowerSync with schema from src/lib/powerSyncSchema.ts
+      console.log('[LoadLists] PowerSync.initialize...');
       await PowerSync.initialize({
         config: {
           powersyncUrl: import.meta.env.VITE_POWERSYNC_URL,
@@ -79,6 +80,7 @@ function App() {
           dbFilename: 'parentpal.db'
         }
       });
+      console.log('[LoadLists] PowerSync.initialize done');
 
       setInitialized(true);
       setStatus('PowerSync initialized successfully');
@@ -87,14 +89,17 @@ function App() {
       const currentUser = connector.getCurrentUser();
       if (currentUser) {
         setUser({
-            id: currentUser.id,
-            email: currentUser.email || ''
+          id: currentUser.id,
+          email: currentUser.email || ''
         });
-        // Bridge token to native
         const token = connector.getAccessToken();
         if (token) {
           await PowerSync.setToken({ token });
         }
+        // Connect so sync runs and Load Lists / queries work (required on web and when restoring session)
+        console.log('[LoadLists] existing session, PowerSync.connect...');
+        await PowerSync.connect();
+        console.log('[LoadLists] PowerSync.connect done');
         setStatus('User already signed in');
       }
 
@@ -132,7 +137,9 @@ function App() {
       }
 
       // Connect to PowerSync
+      console.log('[LoadLists] after sign-in PowerSync.connect...');
       await PowerSync.connect();
+      console.log('[LoadLists] after sign-in PowerSync.connect done');
       setStatus('Connected to PowerSync');
 
     } catch (error: any) {
@@ -157,7 +164,9 @@ function App() {
   };
 
   const loadLists = async () => {
+    console.log('[LoadLists] start');
     try {
+      console.log('[LoadLists] calling PowerSync.getAll...');
       const { rows } = await PowerSync.getAll({
         sql: `
           SELECT
@@ -171,7 +180,7 @@ function App() {
             ) as completed_tasks
           FROM
             lists
-            LEFT JOIN todos ON lists.id = todos.list_id
+          LEFT JOIN todos ON lists.id = todos.list_id
           GROUP BY
             lists.id
           ORDER BY lists.created_at DESC;
@@ -179,11 +188,12 @@ function App() {
         parameters: []
       });
 
+      console.log('[LoadLists] getAll returned, rows:', rows?.length ?? 0, rows);
       setLists(rows as TodoList[]);
-      console.log('Loaded lists with counts:', rows.length);
-
+      console.log('[LoadLists] setLists done');
     } catch (error) {
-      console.error('Failed to load lists:', error);
+      console.error('[LoadLists] Failed to load lists:', error);
+      console.error('[LoadLists] error details:', (error as Error)?.message, (error as Error)?.stack);
     }
   };
 

@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   optimizeDeps: {
-    exclude: ['jeep-sqlite/loader'],
+    entries: ['index.html', '!**/ios/**', '!**/android/**', '!**/DerivedData/**'],
   },
   plugins: [
     // The React and Tailwind plugins are both required for Make, even if
@@ -40,5 +40,9 @@ export default defineConfig({
   },
   server: {
     host: true, // Listen on all addresses, including LAN and public addresses
+    fs: {
+      // Don't serve or read from native build dirs (avoids GRDB/SQLite wasm in ios/DerivedData)
+      deny: ['**/ios/**', '**/android/**', '**/DerivedData/**'],
+    },
   },
 })
