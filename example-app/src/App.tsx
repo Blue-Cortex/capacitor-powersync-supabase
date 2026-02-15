@@ -1,7 +1,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { PowerSync, SupabaseConnector } from '@blue-cortex/capacitor-powersync-supabase';
-import { powerSyncSchema } from './lib/powerSyncSchema';
+// import { powerSyncSchema } from './lib/powerSyncSchema';
+import { powerSyncSchema } from './lib/ppalSchema';
+import { KidsPage } from './pages/KidsPage';
+import { GoalsPage } from './pages/GoalsPage';
+import { TasksPage } from './pages/TasksPage';
+import { AddGoalPage } from './pages/AddGoalPage';
+import { AddTaskPage } from './pages/AddTaskPage';
+import { GoalsTasksDataPage } from './pages/GoalsTasksDataPage';
 import './App.css';
+
+type Page = 'home' | 'kids' | 'goals' | 'tasks' | 'addGoal' | 'addTask' | 'goalsTasksData';
 
 interface User {
   id: string;
@@ -22,11 +31,17 @@ function App() {
   const [status, setStatus] = useState<string>('Not initialized');
   const [user, setUser] = useState<User | null>(null);
   const [lists, setLists] = useState<TodoList[]>([]);
+  const [page, setPage] = useState<Page>('home');
   const listNameRef = useRef<HTMLInputElement>(null);
   const connectorRef = useRef<SupabaseConnector | null>(null);
+  const authUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     initializePowerSync();
+    return () => {
+      authUnsubscribeRef.current?.();
+      authUnsubscribeRef.current = null;
+    };
   }, []);
 
   const initializePowerSync = async () => {
@@ -42,16 +57,30 @@ function App() {
       connectorRef.current = connector;
       await connector.init();
 
+      // Keep PowerSync token in sync when Supabase refreshes the JWT (e.g. before expiry)
+      const {
+        data: { subscription }
+      } = connector.client.auth.onAuthStateChange((_event, session) => {
+        if (session?.access_token) {
+          PowerSync.setToken({ token: session.access_token }).catch((err) =>
+            console.warn('PowerSync setToken after auth change failed:', err)
+          );
+        }
+      });
+      authUnsubscribeRef.current = subscription.unsubscribe;
+
       // Initialize PowerSync with schema from src/lib/powerSyncSchema.ts
+      console.log('[LoadLists] PowerSync.initialize...');
       await PowerSync.initialize({
         config: {
           powersyncUrl: import.meta.env.VITE_POWERSYNC_URL,
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
           supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           schema: powerSyncSchema,
-          dbFilename: 'powersync.db'
+          dbFilename: 'parentpal.db'
         }
       });
+      console.log('[LoadLists] PowerSync.initialize done');
 
       setInitialized(true);
       setStatus('PowerSync initialized successfully');
@@ -60,14 +89,17 @@ function App() {
       const currentUser = connector.getCurrentUser();
       if (currentUser) {
         setUser({
-            id: currentUser.id,
-            email: currentUser.email || ''
+          id: currentUser.id,
+          email: currentUser.email || ''
         });
-        // Bridge token to native
         const token = connector.getAccessToken();
         if (token) {
           await PowerSync.setToken({ token });
         }
+        // Connect so sync runs and Load Lists / queries work (required on web and when restoring session)
+        console.log('[LoadLists] existing session, PowerSync.connect...');
+        await PowerSync.connect();
+        console.log('[LoadLists] PowerSync.connect done');
         setStatus('User already signed in');
       }
 
@@ -105,7 +137,9 @@ function App() {
       }
 
       // Connect to PowerSync
+      console.log('[LoadLists] after sign-in PowerSync.connect...');
       await PowerSync.connect();
+      console.log('[LoadLists] after sign-in PowerSync.connect done');
       setStatus('Connected to PowerSync');
 
     } catch (error: any) {
@@ -130,7 +164,9 @@ function App() {
   };
 
   const loadLists = async () => {
+    console.log('[LoadLists] start');
     try {
+      console.log('[LoadLists] calling PowerSync.getAll...');
       const { rows } = await PowerSync.getAll({
         sql: `
           SELECT
@@ -144,7 +180,7 @@ function App() {
             ) as completed_tasks
           FROM
             lists
-            LEFT JOIN todos ON lists.id = todos.list_id
+          LEFT JOIN todos ON lists.id = todos.list_id
           GROUP BY
             lists.id
           ORDER BY lists.created_at DESC;
@@ -152,11 +188,12 @@ function App() {
         parameters: []
       });
 
+      console.log('[LoadLists] getAll returned, rows:', rows?.length ?? 0, rows);
       setLists(rows as TodoList[]);
-      console.log('Loaded lists with counts:', rows.length);
-
+      console.log('[LoadLists] setLists done');
     } catch (error) {
-      console.error('Failed to load lists:', error);
+      console.error('[LoadLists] Failed to load lists:', error);
+      console.error('[LoadLists] error details:', (error as Error)?.message, (error as Error)?.stack);
     }
   };
 
@@ -178,6 +215,70 @@ function App() {
     }
   };
 
+  if (user && page === 'kids') {
+    return (
+      <div className="App">
+        <KidsPage userId={user.id} onBack={() => setPage('home')} />
+      </div>
+    );
+  }
+
+  if (user && page === 'goals') {
+    return (
+      <div className="App">
+        <GoalsPage
+          userId={user.id}
+          onBack={() => setPage('home')}
+          onAddGoal={() => setPage('addGoal')}
+        />
+      </div>
+    );
+  }
+
+  if (user && page === 'tasks') {
+    return (
+      <div className="App">
+        <TasksPage
+          userId={user.id}
+          onBack={() => setPage('home')}
+          onAddTask={() => setPage('addTask')}
+        />
+      </div>
+    );
+  }
+
+  if (user && page === 'addGoal') {
+    return (
+      <div className="App">
+        <AddGoalPage
+          userId={user.id}
+          onBack={() => setPage('goals')}
+          onSaved={() => setPage('goals')}
+        />
+      </div>
+    );
+  }
+
+  if (user && page === 'addTask') {
+    return (
+      <div className="App">
+        <AddTaskPage
+          userId={user.id}
+          onBack={() => setPage('tasks')}
+          onSaved={() => setPage('tasks')}
+        />
+      </div>
+    );
+  }
+
+  if (page === 'goalsTasksData') {
+    return (
+      <div className="App">
+        <GoalsTasksDataPage userId={user?.id ?? null} onBack={() => setPage('home')} />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <h1>PowerSync Demo</h1>
@@ -187,18 +288,30 @@ function App() {
       </div>
 
       {initialized && (
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
           {!user ? (
-            <button onClick={handleSignIn} style={{ padding: '10px 20px', marginRight: '10px' }}>
+            <button onClick={handleSignIn} style={{ padding: '10px 20px' }}>
               Sign In
             </button>
           ) : (
             <>
-              <button onClick={handleSignOut} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: '#ff4444' }}>
+              <button onClick={handleSignOut} style={{ padding: '10px 20px', backgroundColor: '#ff4444' }}>
                 Sign Out
               </button>
               <button onClick={loadLists} style={{ padding: '10px 20px' }}>
                 Load Lists
+              </button>
+              <button onClick={() => setPage('kids')} style={{ padding: '10px 20px' }}>
+                Kids
+              </button>
+              <button onClick={() => setPage('goals')} style={{ padding: '10px 20px' }}>
+                Goals
+              </button>
+              <button onClick={() => setPage('tasks')} style={{ padding: '10px 20px' }}>
+                Tasks
+              </button>
+              <button onClick={() => setPage('goalsTasksData')} style={{ padding: '10px 20px' }}>
+                Goals & Tasks Data
               </button>
             </>
           )}
