@@ -3,6 +3,7 @@ import { WebPlugin } from '@capacitor/core';
 import type {
   PowerSyncPlugin,
   PowerSyncConfig,
+  QueryOptions,
   QueryResult,
   SyncStatus,
   WatchOptions,
@@ -57,6 +58,12 @@ export class BlueCortexPowerSyncSupabaseWeb extends WebPlugin implements PowerSy
     const result = await this.manager.getAll(options.sql, options.parameters ?? []);
     console.log('[PowerSync Web] getAll result', { rowsLength: result?.rows?.length, rows: result?.rows });
     return result;
+  }
+
+  async query<T = unknown>(options: QueryOptions): Promise<{ rows: T[] }> {
+    if (!this.manager) throw new Error('PowerSync not initialized');
+    const result = await this.manager.getAll(options.sql, options.parameters ?? []);
+    return { rows: (result.rows ?? []) as T[] };
   }
 
   async getOptional(options: { sql: string; parameters?: any[] }): Promise<{ row: any | null }> {

@@ -1,5 +1,5 @@
 import { WebPlugin } from '@capacitor/core';
-import type { PowerSyncPlugin, PowerSyncConfig, QueryResult, SyncStatus, WatchOptions } from './definitions';
+import type { PowerSyncPlugin, PowerSyncConfig, QueryOptions, QueryResult, SyncStatus, WatchOptions } from './definitions';
 export declare class BlueCortexPowerSyncSupabaseWeb extends WebPlugin implements PowerSyncPlugin {
     private manager;
     initialize(options: {
@@ -20,6 +20,9 @@ export declare class BlueCortexPowerSyncSupabaseWeb extends WebPlugin implements
         sql: string;
         parameters?: any[];
     }): Promise<QueryResult>;
+    query<T = unknown>(options: QueryOptions): Promise<{
+        rows: T[];
+    }>;
     getOptional(options: {
         sql: string;
         parameters?: any[];

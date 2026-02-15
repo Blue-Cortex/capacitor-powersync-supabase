@@ -212,6 +212,35 @@ class BlueCortexPowerSyncSupabasePlugin : Plugin() {
         }
     }
 
+    /** Typed query – same as getAll, returns { rows }. Use from JS as PowerSync.query<YourType>({ sql, parameters }). */
+    @PluginMethod
+    fun query(call: PluginCall) {
+        scope.launch {
+            val mgr = manager
+            if (mgr == null) {
+                call.reject("PowerSync not initialized")
+                return@launch
+            }
+
+            val sql = call.getString("sql")
+            if (sql == null) {
+                call.reject("Missing sql parameter")
+                return@launch
+            }
+
+            val parameters = call.getArray("parameters")?.toList<Any>() ?: emptyList()
+
+            try {
+                val results = mgr.getAll(sql, parameters)
+                val ret = JSObject()
+                ret.put("rows", JSArray(results))
+                call.resolve(ret)
+            } catch (e: Exception) {
+                call.reject("Query failed: ${e.message}")
+            }
+        }
+    }
+
     @PluginMethod
     fun getOptional(call: PluginCall) {
         scope.launch {

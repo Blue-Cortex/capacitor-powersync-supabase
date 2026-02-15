@@ -74,6 +74,15 @@ export interface WatchOptions {
   throttleMs?: number;
 }
 
+/**
+ * Options for typed query (mirrors PowerSync db.query<RowType>({})).
+ * Use for one-shot reads with a generic row type.
+ */
+export interface QueryOptions {
+  sql: string;
+  parameters?: any[];
+}
+
 export type WatchCallback = (result: QueryResult) => void;
 
 export interface PowerSyncPlugin {
@@ -107,6 +116,12 @@ export interface PowerSyncPlugin {
    * Execute a SQL query and return all results
    */
   getAll(options: { sql: string; parameters?: any[] }): Promise<QueryResult>;
+
+  /**
+   * Typed query – same as getAll but returns rows as T[].
+   * Use for one-shot reads: PowerSync.query<EnhancedListRecord>({ sql, parameters }).
+   */
+  query<T = unknown>(options: QueryOptions): Promise<{ rows: T[] }>;
 
   /**
    * Execute a SQL query and return a single result

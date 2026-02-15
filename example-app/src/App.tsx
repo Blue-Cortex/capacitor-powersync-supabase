@@ -17,7 +17,8 @@ interface User {
   email: string;
 }
 
-interface TodoList {
+/** Typed row from the lists + todo counts query (use with PowerSync.query<EnhancedListRecord>) */
+interface EnhancedListRecord {
   id: string;
   name: string;
   created_at: string;
@@ -30,7 +31,7 @@ function App() {
   const [initialized, setInitialized] = useState<boolean>(false);
   const [status, setStatus] = useState<string>('Not initialized');
   const [user, setUser] = useState<User | null>(null);
-  const [lists, setLists] = useState<TodoList[]>([]);
+  const [lists, setLists] = useState<EnhancedListRecord[]>([]);
   const [page, setPage] = useState<Page>('home');
   const listNameRef = useRef<HTMLInputElement>(null);
   const connectorRef = useRef<SupabaseConnector | null>(null);
@@ -164,10 +165,8 @@ function App() {
   };
 
   const loadLists = async () => {
-    console.log('[LoadLists] start');
     try {
-      console.log('[LoadLists] calling PowerSync.getAll...');
-      const { rows } = await PowerSync.getAll({
+      const { rows } = await PowerSync.query<EnhancedListRecord>({
         sql: `
           SELECT
             lists.*,
@@ -177,7 +176,7 @@ function App() {
                 WHEN todos.completed = 1 THEN 1
                 ELSE 0
               END
-            ) as completed_tasks
+            ) AS completed_tasks
           FROM
             lists
           LEFT JOIN todos ON lists.id = todos.list_id
@@ -187,13 +186,9 @@ function App() {
         `,
         parameters: []
       });
-
-      console.log('[LoadLists] getAll returned, rows:', rows?.length ?? 0, rows);
-      setLists(rows as TodoList[]);
-      console.log('[LoadLists] setLists done');
+      setLists(rows ?? []);
     } catch (error) {
-      console.error('[LoadLists] Failed to load lists:', error);
-      console.error('[LoadLists] error details:', (error as Error)?.message, (error as Error)?.stack);
+      console.error('Failed to load lists:', error);
     }
   };
 
