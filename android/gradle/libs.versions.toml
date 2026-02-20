@@ -5,7 +5,7 @@ android-compileSdk = "36"
 
 # Dependencies
 coroutines = "1.10.2"
-gradle = "9.0.0"
+gradle = "8.7.3"
 ktor = "3.4.0"
 powersync = "1.10.4"
 supabase = "3.3.0"

@@ -62,7 +62,7 @@ export function GoalsTasksDataPage({ userId, onBack }: GoalsTasksDataPageProps) 
         ? `SELECT * FROM goals WHERE created_by = ? ORDER BY created_at DESC`
         : `SELECT * FROM goals ORDER BY created_at DESC`;
       const goalsParams = userId ? [userId] : [];
-      const { rows: goalsRows } = await PowerSync.getAll({
+      const { rows: goalsRows } = await PowerSync.query<GoalRow>({
         sql: goalsSql,
         parameters: goalsParams,
       });
@@ -72,19 +72,19 @@ export function GoalsTasksDataPage({ userId, onBack }: GoalsTasksDataPageProps) 
         ? `SELECT * FROM tasks WHERE created_by = ? ORDER BY created_at DESC`
         : `SELECT * FROM tasks ORDER BY created_at DESC`;
       const tasksParams = userId ? [userId] : [];
-      const { rows: tasksRows } = await PowerSync.getAll({
+      const { rows: tasksRows } = await PowerSync.query<TaskRow>({
         sql: tasksSql,
         parameters: tasksParams,
       });
       setTasks((tasksRows ?? []) as TaskRow[]);
 
-      const { rows: goalKidsRows } = await PowerSync.getAll({
+      const { rows: goalKidsRows } = await PowerSync.query<Record<string, unknown>>({
         sql: 'SELECT * FROM goal_kids ORDER BY assigned_at DESC',
         parameters: [],
       });
       setGoalKids((goalKidsRows ?? []) as Record<string, unknown>[]);
 
-      const { rows: taskKidsRows } = await PowerSync.getAll({
+      const { rows: taskKidsRows } = await PowerSync.query<Record<string, unknown>>({
         sql: 'SELECT * FROM task_kids ORDER BY assigned_at DESC',
         parameters: [],
       });
@@ -130,15 +130,20 @@ export function GoalsTasksDataPage({ userId, onBack }: GoalsTasksDataPageProps) 
           type="button"
           onClick={load}
           disabled={loading}
-          style={{ padding: '8px 12px', background: '#444', color: '#fff', border: 'none', borderRadius: 8, marginLeft: 'auto' }}
+          style={{
+            padding: '8px 12px',
+            background: '#444',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            marginLeft: 'auto',
+          }}
         >
           {loading ? 'Loading…' : 'Refresh'}
         </button>
       </header>
 
-      {error && (
-        <div style={{ padding: 12, background: '#4a2020', borderRadius: 8, marginBottom: 16 }}>{error}</div>
-      )}
+      {error && <div style={{ padding: 12, background: '#4a2020', borderRadius: 8, marginBottom: 16 }}>{error}</div>}
 
       <section style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 14, marginBottom: 8, color: '#aaa' }}>Goals ({goals.length})</h2>
