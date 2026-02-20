@@ -15,7 +15,7 @@ export function TasksPage({ userId, onBack, onAddTask }: TasksPageProps) {
   const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const { rows } = await PowerSync.getAll({
+      const { rows } = await PowerSync.query<TaskRow>({
         sql: `SELECT * FROM tasks
               WHERE created_by = ? AND (deleted_at IS NULL OR deleted_at = '')
               ORDER BY date ASC, created_at DESC`,
@@ -34,8 +34,7 @@ export function TasksPage({ userId, onBack, onAddTask }: TasksPageProps) {
     loadTasks();
   }, [loadTasks]);
 
-  const isTaskCompleted = (t: TaskRow) =>
-    t.is_completed === 1 || t.is_completed === '1' || t.is_completed === true;
+  const isTaskCompleted = (t: TaskRow) => t.is_completed === 1 || t.is_completed === '1' || t.is_completed === true;
 
   return (
     <div style={{ padding: 16, maxWidth: 600, margin: '0 auto', textAlign: 'left' }}>
@@ -44,7 +43,11 @@ export function TasksPage({ userId, onBack, onAddTask }: TasksPageProps) {
           ← Back
         </button>
         <h1 style={{ margin: 0 }}>Tasks</h1>
-        <button type="button" onClick={onAddTask} style={{ padding: '8px 16px', background: '#1a1a1a', color: '#fff', borderRadius: 8 }}>
+        <button
+          type="button"
+          onClick={onAddTask}
+          style={{ padding: '8px 16px', background: '#1a1a1a', color: '#fff', borderRadius: 8 }}
+        >
           Add
         </button>
       </div>

@@ -1,5 +1,5 @@
 {
-  "originHash" : "9f269142c7f5537cb82b0ad32646777d62774433462645c466b9814d54368a3d",
+  "originHash" : "62ca2ad9021b474469a193adafef6da78bbec287479426876c3cd29f922e3baf",
   "pins" : [
     {
       "identity" : "capacitor-swift-pm",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/groue/GRDB.swift.git",
       "state" : {
-        "revision" : "aa0079aeb82a4bf00324561a40bffe68c6fe1c26",
-        "version" : "7.9.0"
+        "revision" : "36e30a6f1ef10e4194f6af0cff90888526f0c115",
+        "version" : "7.10.0"
       }
     },
     {

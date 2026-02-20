@@ -53,18 +53,18 @@ function App() {
       const connector = new SupabaseConnector({
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
         supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-        powersyncUrl: import.meta.env.VITE_POWERSYNC_URL
+        powersyncUrl: import.meta.env.VITE_POWERSYNC_URL,
       });
       connectorRef.current = connector;
       await connector.init();
 
       // Keep PowerSync token in sync when Supabase refreshes the JWT (e.g. before expiry)
       const {
-        data: { subscription }
+        data: { subscription },
       } = connector.client.auth.onAuthStateChange((_event, session) => {
         if (session?.access_token) {
           PowerSync.setToken({ token: session.access_token }).catch((err) =>
-            console.warn('PowerSync setToken after auth change failed:', err)
+            console.warn('PowerSync setToken after auth change failed:', err),
           );
         }
       });
@@ -78,10 +78,17 @@ function App() {
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
           supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           schema: powerSyncSchema,
-          dbFilename: 'parentpal.db'
-        }
+          dbFilename: 'powersync-demo.db',
+        },
       });
       console.log('[LoadLists] PowerSync.initialize done');
+
+      try {
+        const status = await PowerSync.getSyncStatus();
+        console.log('PowerSync initial sync status:', JSON.stringify(status));
+      } catch (e) {
+        console.warn('Could not get PowerSync sync status:', e);
+      }
 
       setInitialized(true);
       setStatus('PowerSync initialized successfully');
@@ -91,7 +98,7 @@ function App() {
       if (currentUser) {
         setUser({
           id: currentUser.id,
-          email: currentUser.email || ''
+          email: currentUser.email || '',
         });
         const token = connector.getAccessToken();
         if (token) {
@@ -106,7 +113,6 @@ function App() {
 
       // Get version
       console.log('PowerSync version:', (await PowerSync.getVersion()).version);
-
     } catch (error: any) {
       console.error('Failed to initialize PowerSync:', error);
       setStatus(`Error: ${error.message}`);
@@ -125,7 +131,7 @@ function App() {
       if (currentUser) {
         setUser({
           id: currentUser.id,
-          email: currentUser.email || ''
+          email: currentUser.email || '',
         });
       }
       console.log('Signed in:', currentUser);
@@ -142,7 +148,6 @@ function App() {
       await PowerSync.connect();
       console.log('[LoadLists] after sign-in PowerSync.connect done');
       setStatus('Connected to PowerSync');
-
     } catch (error: any) {
       console.error('Sign in failed:', error);
       setStatus(`Sign in error: ${error.message}`);
@@ -184,7 +189,7 @@ function App() {
             lists.id
           ORDER BY lists.created_at DESC;
         `,
-        parameters: []
+        parameters: [],
       });
       setLists(rows ?? []);
     } catch (error) {
@@ -199,7 +204,7 @@ function App() {
     try {
       await PowerSync.execute({
         sql: 'INSERT INTO lists (id, created_at, name, owner_id) VALUES (uuid(), datetime(), ?, ?)',
-        parameters: [name, user.id]
+        parameters: [name, user.id],
       });
       if (listNameRef.current) {
         listNameRef.current.value = ''; // Clear input
@@ -221,11 +226,7 @@ function App() {
   if (user && page === 'goals') {
     return (
       <div className="App">
-        <GoalsPage
-          userId={user.id}
-          onBack={() => setPage('home')}
-          onAddGoal={() => setPage('addGoal')}
-        />
+        <GoalsPage userId={user.id} onBack={() => setPage('home')} onAddGoal={() => setPage('addGoal')} />
       </div>
     );
   }
@@ -233,11 +234,7 @@ function App() {
   if (user && page === 'tasks') {
     return (
       <div className="App">
-        <TasksPage
-          userId={user.id}
-          onBack={() => setPage('home')}
-          onAddTask={() => setPage('addTask')}
-        />
+        <TasksPage userId={user.id} onBack={() => setPage('home')} onAddTask={() => setPage('addTask')} />
       </div>
     );
   }
@@ -245,11 +242,7 @@ function App() {
   if (user && page === 'addGoal') {
     return (
       <div className="App">
-        <AddGoalPage
-          userId={user.id}
-          onBack={() => setPage('goals')}
-          onSaved={() => setPage('goals')}
-        />
+        <AddGoalPage userId={user.id} onBack={() => setPage('goals')} onSaved={() => setPage('goals')} />
       </div>
     );
   }
@@ -257,11 +250,7 @@ function App() {
   if (user && page === 'addTask') {
     return (
       <div className="App">
-        <AddTaskPage
-          userId={user.id}
-          onBack={() => setPage('tasks')}
-          onSaved={() => setPage('tasks')}
-        />
+        <AddTaskPage userId={user.id} onBack={() => setPage('tasks')} onSaved={() => setPage('tasks')} />
       </div>
     );
   }
@@ -315,12 +304,7 @@ function App() {
 
       {user && (
         <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <input
-            type="text"
-            placeholder="New List Name"
-            ref={listNameRef}
-            style={{ padding: '8px' }}
-          />
+          <input type="text" placeholder="New List Name" ref={listNameRef} style={{ padding: '8px' }} />
           <button onClick={createNewList}>Create List</button>
         </div>
       )}
@@ -333,7 +317,9 @@ function App() {
               <li key={list.id} style={{ marginBottom: '10px', textAlign: 'left' }}>
                 <strong>{list.name}</strong>
                 <br />
-                <small>Tasks: {list.completed_tasks || 0} / {list.total_tasks || 0}</small>
+                <small>
+                  Tasks: {list.completed_tasks || 0} / {list.total_tasks || 0}
+                </small>
                 <br />
                 <small style={{ color: '#666' }}>Created: {new Date(list.created_at).toLocaleDateString()}</small>
               </li>

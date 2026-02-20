@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PowerSync } from '@blue-cortex/capacitor-powersync-supabase';
-import {
-  BookOpen,
-  Trophy,
-  Monitor,
-  Utensils,
-  Target,
-  Heart,
-  Check,
-} from 'lucide-react';
+import { BookOpen, Trophy, Monitor, Utensils, Target, Heart, Check } from 'lucide-react';
 import type { GoalCategory } from '../types/goals-tasks';
 
 const CATEGORIES: { value: GoalCategory; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -20,14 +12,7 @@ const CATEGORIES: { value: GoalCategory; label: string; icon: React.ComponentTyp
   { value: 'Other', label: 'Other', icon: Target },
 ];
 
-const GOAL_COLORS = [
-  '#4CAF50',
-  '#2196F3',
-  '#9C27B0',
-  '#FF9800',
-  '#E91E63',
-  '#795548',
-];
+const GOAL_COLORS = ['#4CAF50', '#2196F3', '#9C27B0', '#FF9800', '#E91E63', '#795548'];
 
 interface KidRow {
   id: string;
@@ -56,7 +41,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
   const loadKids = useCallback(async () => {
     setKidsLoading(true);
     try {
-      const { rows } = await PowerSync.getAll({
+      const { rows } = await PowerSync.query<KidRow>({
         sql: 'SELECT id, name FROM kids WHERE user_id = ? ORDER BY created_at DESC',
         parameters: [userId],
       });
@@ -79,7 +64,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
 
   const toggleKid = (id: string) => {
     setSelectedKidIds((prev) =>
-      prev.includes(id) ? (prev.length > 1 ? prev.filter((k) => k !== id) : prev) : [...prev, id]
+      prev.includes(id) ? (prev.length > 1 ? prev.filter((k) => k !== id) : prev) : [...prev, id],
     );
   };
 
@@ -163,9 +148,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
 
       <main className="px-4 py-6 pb-24 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Title *
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title *</label>
           <input
             type="text"
             value={title}
@@ -175,9 +158,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -187,9 +168,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Category
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => {
               const Icon = c.icon;
@@ -214,9 +193,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Kids *
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Kids *</label>
           {kidsLoading ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">Loading your kids…</p>
           ) : kids.length === 0 ? (
@@ -247,9 +224,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Deadline
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Deadline</label>
           <input
             type="date"
             value={deadline}
@@ -273,9 +248,7 @@ export function AddGoalPage({ userId, onBack, onSaved }: AddGoalPageProps) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Color
-          </label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Color</label>
           <div className="flex gap-2 flex-wrap">
             {GOAL_COLORS.map((c) => (
               <button

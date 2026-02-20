@@ -35,3 +35,4 @@ android/*.iml
 
 # Swift PM
 .swiftpm/
+.build/

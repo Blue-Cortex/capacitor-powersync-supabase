@@ -27,7 +27,7 @@ export function KidsPage({ userId, onBack }: KidsPageProps) {
   const loadKids = useCallback(async () => {
     setLoading(true);
     try {
-      const { rows } = await PowerSync.getAll({
+      const { rows } = await PowerSync.query<Kid>({
         sql: 'SELECT * FROM kids WHERE user_id = ? ORDER BY created_at DESC',
         parameters: [userId],
       });

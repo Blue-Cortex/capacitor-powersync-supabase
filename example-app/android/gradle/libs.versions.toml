@@ -18,7 +18,8 @@ junitVersion = "1.3.0"
 # Plugins
 # Downgraded to 8.7.3 for Capacitor 6 compatibility
 android-gradle-plugin = "8.7.3"
-kotlin = "2.3.0"
+kotlin = "2.3.10"
+kotlinxCoroutinesAndroid = "1.10.2"
 
 [libraries]
 # PowerSync
