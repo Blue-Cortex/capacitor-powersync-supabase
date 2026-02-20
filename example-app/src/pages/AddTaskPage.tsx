@@ -30,7 +30,7 @@ export function AddTaskPage({ userId, onBack, onSaved }: AddTaskPageProps) {
   const loadKids = useCallback(async () => {
     setKidsLoading(true);
     try {
-      const { rows } = await PowerSync.getAll({
+      const { rows } = await PowerSync.query<KidRow>({
         sql: 'SELECT id, name FROM kids WHERE user_id = ? ORDER BY created_at DESC',
         parameters: [userId],
       });
@@ -50,7 +50,7 @@ export function AddTaskPage({ userId, onBack, onSaved }: AddTaskPageProps) {
   }, [loadKids]);
 
   useEffect(() => {
-    PowerSync.getAll({
+    PowerSync.query<GoalRow>({
       sql: `SELECT id, title FROM goals WHERE created_by = ? AND (deleted_at IS NULL OR deleted_at = '') ORDER BY title`,
       parameters: [userId],
     }).then(({ rows }) => setGoals((rows ?? []) as GoalRow[]));
@@ -58,7 +58,7 @@ export function AddTaskPage({ userId, onBack, onSaved }: AddTaskPageProps) {
 
   const toggleKid = (id: string) => {
     setSelectedKidIds((prev) =>
-      prev.includes(id) ? (prev.length > 1 ? prev.filter((k) => k !== id) : prev) : [...prev, id]
+      prev.includes(id) ? (prev.length > 1 ? prev.filter((k) => k !== id) : prev) : [...prev, id],
     );
   };
 
@@ -79,19 +79,7 @@ export function AddTaskPage({ userId, onBack, onSaved }: AddTaskPageProps) {
       await PowerSync.execute({
         sql: `INSERT INTO tasks (id, goal_id, title, notes, date, start_time, end_time, type, is_completed, pinned, location, created_by, created_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)`,
-        parameters: [
-          taskId,
-          goalId || null,
-          title.trim(),
-          null,
-          null,
-          null,
-          null,
-          'Task',
-          null,
-          userId,
-          now,
-        ],
+        parameters: [taskId, goalId || null, title.trim(), null, null, null, null, 'Task', null, userId, now],
       });
       for (const kidId of selectedKidIds) {
         await PowerSync.execute({
@@ -122,7 +110,13 @@ export function AddTaskPage({ userId, onBack, onSaved }: AddTaskPageProps) {
           type="button"
           onClick={handleSave}
           disabled={saving || !title.trim() || selectedKidIds.length === 0}
-          style={{ padding: '8px 16px', background: '#1a1a1a', color: '#fff', borderRadius: 8, opacity: saving ? 0.6 : 1 }}
+          style={{
+            padding: '8px 16px',
+            background: '#1a1a1a',
+            color: '#fff',
+            borderRadius: 8,
+            opacity: saving ? 0.6 : 1,
+          }}
         >
           Save
         </button>
@@ -148,7 +142,9 @@ export function AddTaskPage({ userId, onBack, onSaved }: AddTaskPageProps) {
         >
           <option value="">None</option>
           {goals.map((g) => (
-            <option key={g.id} value={g.id}>{g.title}</option>
+            <option key={g.id} value={g.id}>
+              {g.title}
+            </option>
           ))}
         </select>
       </div>
